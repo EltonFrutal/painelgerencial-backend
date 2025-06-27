@@ -7,6 +7,8 @@ import { PrismaClient } from '@prisma/client';
 
 dotenv.config();
 
+// force redeploy
+
 // Inicializa o Fastify com logs habilitados
 const fastify = Fastify({ logger: true });
 
