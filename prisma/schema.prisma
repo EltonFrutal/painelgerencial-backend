@@ -63,9 +63,9 @@ model Vendas {
   Pedido         String    @db.VarChar(50)
   Cliente        String    @db.VarChar(150)
   DataEmissao    DateTime
-  ValorCusto     Decimal   @db.Numeric(12, 2)
-  ValorVenda     Decimal   @db.Numeric(12, 2)
-  ValorLucro     Decimal   @db.Numeric(12, 2)
+  ValorCusto     Decimal   @db.Decimal(12, 2)
+  ValorVenda     Decimal   @db.Decimal(12, 2)
+  ValorLucro     Decimal   @db.Decimal(12, 2)
   Tipo           String    @db.VarChar(50)
   Vendedor       String    @db.VarChar(100)
   Empresa        String    @db.VarChar(100)
