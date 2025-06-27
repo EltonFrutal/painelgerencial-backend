@@ -6,3 +6,69 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Organizacao {
+  idOrganizacao Int      @id @default(autoincrement())
+  Organizacao    String
+  Ativo          Boolean
+
+  usuarios       Usuario[]
+  assessores     AssessorOrganizacao[]
+  vendas         Vendas[]
+}
+
+model Usuario {
+  idUsuario       Int     @id @default(autoincrement())
+  Usuario         String
+  Email           String?
+  SenhaHash       String
+  idOrganizacao   Int
+  Ativo           Boolean @default(true)
+  VendasPerm      Boolean @map("Vendas")
+  AReceberPerm    Boolean @map("AReceber")
+  APagarPerm      Boolean @map("APagar")
+  HistoricoPerm   Boolean @map("Historico")
+  EstoquePerm     Boolean @map("Estoque")
+  ComprasPerm     Boolean @map("Compras")
+  ResultadosPerm  Boolean @map("Resultados")
+  IndicadorPerm   Boolean @map("Indicador")
+
+  organizacao     Organizacao @relation(fields: [idOrganizacao], references: [idOrganizacao])
+}
+
+model Assessor {
+  id         Int     @id @default(autoincrement())
+  Assessor   String
+  Email      String?
+  SenhaHash  String
+  Ativo      Boolean @default(true)
+  Admin      Boolean @default(false)
+
+  organizacoes AssessorOrganizacao[]
+}
+
+model AssessorOrganizacao {
+  id             Int          @id @default(autoincrement())
+  idAssessor     Int
+  idOrganizacao  Int
+
+  assessor       Assessor     @relation(fields: [idAssessor], references: [id])
+  organizacao    Organizacao  @relation(fields: [idOrganizacao], references: [idOrganizacao])
+}
+
+model Vendas {
+  idVendas       Int       @id @default(autoincrement())
+  idOrganizacao  Int
+  Organizacao    String    @db.VarChar(100)
+  Pedido         String    @db.VarChar(50)
+  Cliente        String    @db.VarChar(150)
+  DataEmissao    DateTime
+  ValorCusto     Decimal   @db.Numeric(12, 2)
+  ValorVenda     Decimal   @db.Numeric(12, 2)
+  ValorLucro     Decimal   @db.Numeric(12, 2)
+  Tipo           String    @db.VarChar(50)
+  Vendedor       String    @db.VarChar(100)
+  Empresa        String    @db.VarChar(100)
+
+  organizacao    Organizacao @relation(fields: [idOrganizacao], references: [idOrganizacao])
+}
