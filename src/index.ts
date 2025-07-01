@@ -19,7 +19,10 @@ fastify.get("/", async (request, reply) => {
     return { message: "PGWebIA backend rodando!" };
 });
 
-fastify.listen({ port: 3001 }, (err, address) => {
+// 🚩 ALTERAÇÃO PARA FUNCIONAR NO RENDER:
+const PORT = Number(process.env.PORT) || 3001;
+
+fastify.listen({ port: PORT, host: "0.0.0.0" }, (err, address) => {
     if (err) {
         fastify.log.error(err);
         process.exit(1);
