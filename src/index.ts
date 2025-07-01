@@ -22,10 +22,12 @@ fastify.get("/", async (request, reply) => {
 // 🚩 ALTERAÇÃO PARA FUNCIONAR NO RENDER:
 const PORT = Number(process.env.PORT) || 3001;
 
-fastify.listen({ port: PORT, host: "0.0.0.0" }, (err, address) => {
-    if (err) {
+// ✅ USANDO PROMISE PARA GARANTIR FUNCIONAMENTO NO RENDER
+fastify.listen({ port: PORT, host: "0.0.0.0" })
+    .then((address) => {
+        fastify.log.info(`Servidor rodando em ${address}`);
+    })
+    .catch((err) => {
         fastify.log.error(err);
         process.exit(1);
-    }
-    fastify.log.info(`Servidor rodando em ${address}`);
-});
+    });
