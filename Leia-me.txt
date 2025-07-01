@@ -1,0 +1,30 @@
+Prisma rodando na porta 5556 (5555 não roda)
+
+quando o prisma aponta para render
+verificar variável de ambiente:
+Execute no PowerShell:
+
+powershell
+Copiar
+Editar
+echo $Env:DATABASE_URL
+✅ Se retornar o link da Render, precisamos limpar.
+
+Para limpar:
+
+powershell
+Copiar
+Editar
+Remove-Item Env:DATABASE_URL
+3️⃣ Limpar cache do Prisma:
+No terminal:
+
+bash
+Copiar
+Editar
+npx prisma generate --clear-cache
+4️⃣ Rodar o pull novamente:
+bash
+Copiar
+Editar
+npx prisma db pull

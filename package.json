@@ -1,24 +1,36 @@
 {
-  "name": "backend",
+  "name": "pgwebia-backend",
   "version": "1.0.0",
-  "type": "module",
-  "main": "server.js",
+  "description": "Backend do PGWebIA rodando Fastify, Prisma e TypeScript com aliases prontos",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "prisma generate",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "postinstall": "prisma generate"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "fastify",
+    "prisma",
+    "typescript",
+    "pgwebia"
+  ],
+  "author": "Elton",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@fastify/cors": "^11.0.1",
+    "@fastify/jwt": "^9.1.0",
     "@prisma/client": "^6.10.1",
-    "dotenv": "^16.6.0",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.6.1",
     "fastify": "^5.4.0",
-    "fastify-cors": "^6.0.3",
-    "fastify-jwt": "^4.1.3",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.12.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
     "prisma": "^6.10.1"
   }
 }

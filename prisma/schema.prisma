@@ -7,68 +7,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Organizacao {
-  idOrganizacao Int      @id @default(autoincrement())
-  Organizacao    String
-  Ativo          Boolean
-
-  usuarios       Usuario[]
-  assessores     AssessorOrganizacao[]
-  vendas         Vendas[]
+model vendas {
+  idvendas      Int      @id @default(autoincrement()) // ADICIONADO @id
+  idorganizacao Int
+  organizacao   String?  @db.VarChar(100)
+  pedido        String?  @db.VarChar(50)
+  cliente       String?  @db.VarChar(150)
+  dataemissao   DateTime @db.Date
+  valorcusto    Decimal? @db.Decimal(12, 2)
+  valorvenda    Decimal? @db.Decimal(12, 2)
+  valorlucro    Decimal? @db.Decimal(12, 2)
+  tipo          String?  @db.VarChar(50)
+  vendedor      String?  @db.VarChar(100)
+  empresa       String?  @db.VarChar(100)
 }
 
-model Usuario {
-  idUsuario       Int     @id @default(autoincrement())
-  Usuario         String
-  Email           String?
-  SenhaHash       String
-  idOrganizacao   Int
-  Ativo           Boolean @default(true)
-  VendasPerm      Boolean @map("Vendas")
-  AReceberPerm    Boolean @map("AReceber")
-  APagarPerm      Boolean @map("APagar")
-  HistoricoPerm   Boolean @map("Historico")
-  EstoquePerm     Boolean @map("Estoque")
-  ComprasPerm     Boolean @map("Compras")
-  ResultadosPerm  Boolean @map("Resultados")
-  IndicadorPerm   Boolean @map("Indicador")
-
-  organizacao     Organizacao @relation(fields: [idOrganizacao], references: [idOrganizacao])
+model assessor {
+  id        Int     @id @default(autoincrement())
+  assessor  String
+  email     String
+  senhahash String
+  ativo     Boolean
+  admin     Boolean
 }
 
-model Assessor {
-  id         Int     @id @default(autoincrement())
-  Assessor   String
-  Email      String?
-  SenhaHash  String
-  Ativo      Boolean @default(true)
-  Admin      Boolean @default(false)
-
-  organizacoes AssessorOrganizacao[]
+model assessororganizacao {
+  id         Int @id @default(autoincrement()) // ADICIONADO @id
+  idassessor Int
+  idorganizacao Int
 }
 
-model AssessorOrganizacao {
-  id             Int          @id @default(autoincrement())
-  idAssessor     Int
-  idOrganizacao  Int
-
-  assessor       Assessor     @relation(fields: [idAssessor], references: [id])
-  organizacao    Organizacao  @relation(fields: [idOrganizacao], references: [idOrganizacao])
+model organizacao {
+  idorganizacao Int @id // ADICIONADO @id
+  organizacao   String
+  ativo         Boolean
 }
 
-model Vendas {
-  idVendas       Int       @id @default(autoincrement())
-  idOrganizacao  Int
-  Organizacao    String    @db.VarChar(100)
-  Pedido         String    @db.VarChar(50)
-  Cliente        String    @db.VarChar(150)
-  DataEmissao    DateTime
-  ValorCusto     Decimal   @db.Decimal(12, 2)
-  ValorVenda     Decimal   @db.Decimal(12, 2)
-  ValorLucro     Decimal   @db.Decimal(12, 2)
-  Tipo           String    @db.VarChar(50)
-  Vendedor       String    @db.VarChar(100)
-  Empresa        String    @db.VarChar(100)
-
-  organizacao    Organizacao @relation(fields: [idOrganizacao], references: [idOrganizacao])
+model usuario {
+  idusuario     Int @id // ADICIONADO @id
+  usuario       String
+  email         String
+  senhahash     String
+  idorganizacao Int
+  ativo         Boolean
+  vendas        Boolean
+  areceber      Boolean
+  apagar        Boolean
+  historico     Boolean
+  estoque       Boolean
+  compras       Boolean
+  resultados    Boolean
+  indicador     Boolean
 }
