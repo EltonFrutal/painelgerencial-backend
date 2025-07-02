@@ -1,4 +1,3 @@
-const http = require('http');
 const Fastify = require('fastify');
 
 const PORT = process.env.PORT || 3001;
@@ -13,11 +12,10 @@ fastify.get('/ping', async (request, reply) => {
     return { message: "pong" };
 });
 
-// Cria o servidor HTTP manualmente garantindo exposição
-const server = http.createServer((req, res) => {
-    fastify.routing(req, res);
-});
-
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Fastify rodando via HTTP em http://0.0.0.0:${PORT}`);
+fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+    console.log(`✅ Fastify rodando em ${address}`);
 });
