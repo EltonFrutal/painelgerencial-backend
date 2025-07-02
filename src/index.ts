@@ -20,15 +20,13 @@ async function buildServer() {
         return { message: "PGWebIA backend rodando!" };
     });
 
-    // 🚩 Adiciona Express para forçar o bind
-    const express = require('express');
-    const expressApp = express();
-
-    expressApp.use(fastify.server);
-
-    const PORT = process.env.PORT || 3001;
-    expressApp.listen(PORT, "0.0.0.0", () => {
-        console.log(`✅ Servidor rodando em http://0.0.0.0:${PORT}`);
+    const PORT = Number(process.env.PORT) || 3001;
+    fastify.listen({ port: PORT, host: "0.0.0.0" }, (err, address) => {
+        if (err) {
+            fastify.log.error(err);
+            process.exit(1);
+        }
+        fastify.log.info(`✅ Servidor rodando em ${address}`);
     });
 }
 
