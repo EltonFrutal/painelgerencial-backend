@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 
 export default async function authRoutes(fastify: FastifyInstance) {
     // LOGIN DE USUÁRIO
-    fastify.post("/login/usuario", async (request, reply) => {
+    fastify.post("/login", async (request, reply) => {
         const { idorganizacao, usuario, senha } = request.body as {
             idorganizacao: number,
             usuario: string,
