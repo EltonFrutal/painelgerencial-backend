@@ -1,3 +1,5 @@
+// backend/package.json
+
 {
   "name": "pgwebia-backend",
   "version": "1.0.0",
@@ -6,7 +8,8 @@
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
-    "start": "node src/server-fastify.js",
+    "generate": "prisma generate",
+    "start": "npm run generate && node src/server-fastify.js",
     "postinstall": "prisma generate"
   },
   "keywords": [
