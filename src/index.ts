@@ -23,7 +23,9 @@ fastify.get("/", async (request, reply) => {
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const HOST = process.env.HOST || "0.0.0.0"; // ✅ Garantir compatibilidade com Render
 
-fastify.listen(PORT, HOST)
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
+
+fastify.listen({ port: PORT, host: "0.0.0.0" })
     .then((address) => {
         fastify.log.info(`✅ Servidor rodando em ${address}`);
     })
