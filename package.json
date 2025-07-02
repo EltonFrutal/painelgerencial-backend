@@ -33,5 +33,11 @@
     "prisma": "^6.10.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "config": {
+    "omit": "dev"
   }
 }
