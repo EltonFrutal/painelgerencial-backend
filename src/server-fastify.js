@@ -1,7 +1,7 @@
 // src/server-fastify.js
 
 const Fastify = require('fastify');
-const authRoutes = require('./routes/auth').default;
+const authRoutes = require('./routes/auth');
 
 const PORT = process.env.PORT || 3001;
 const fastify = Fastify({ logger: true });
