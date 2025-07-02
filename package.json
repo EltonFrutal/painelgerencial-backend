@@ -2,11 +2,11 @@
   "name": "pgwebia-backend",
   "version": "1.0.0",
   "description": "Backend do PGWebIA rodando Fastify, Prisma e TypeScript com aliases prontos",
-  "main": "server.js",                               
+  "main": "src/server-fastify.js",
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
-    "start": "node server.js",                     
+    "start": "node src/server-fastify.js",
     "postinstall": "prisma generate"
   },
   "keywords": [
