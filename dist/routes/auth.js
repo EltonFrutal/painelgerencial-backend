@@ -9,7 +9,7 @@ const client_1 = __importDefault(require("../prisma/client"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 async function authRoutes(fastify) {
     // LOGIN DE USUÁRIO
-    fastify.post("/login/usuario", async (request, reply) => {
+    fastify.post("/login", async (request, reply) => {
         const { idorganizacao, usuario, senha } = request.body;
         try {
             const user = await client_1.default.usuario.findFirst({

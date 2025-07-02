@@ -11,19 +11,23 @@ const usuario_1 = __importDefault(require("./routes/usuario"));
 const organizacao_1 = __importDefault(require("./routes/organizacao"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const fastify = (0, fastify_1.default)({ logger: true });
-fastify.register(cors_1.default, { origin: "*" });
-fastify.register(jwt_1.default, { secret: "pgwebia-secret" });
-fastify.register(auth_1.default, { prefix: "/auth" });
-fastify.register(usuario_1.default, { prefix: "/api" });
-fastify.register(organizacao_1.default, { prefix: "/api" });
-fastify.get("/", async (request, reply) => {
-    return { message: "PGWebIA backend rodando!" };
-});
-fastify.listen({ port: 3001 }, (err, address) => {
-    if (err) {
-        fastify.log.error(err);
-        process.exit(1);
-    }
-    fastify.log.info(`Servidor rodando em ${address}`);
-});
+async function buildServer() {
+    const fastify = (0, fastify_1.default)({ logger: true });
+    fastify.register(cors_1.default, { origin: "*" });
+    fastify.register(jwt_1.default, { secret: "pgwebia-secret" });
+    fastify.register(auth_1.default, { prefix: "/auth" });
+    fastify.register(usuario_1.default, { prefix: "/api" });
+    fastify.register(organizacao_1.default, { prefix: "/api" });
+    fastify.get("/", async (request, reply) => {
+        return { message: "PGWebIA backend rodando!" };
+    });
+    const PORT = Number(process.env.PORT) || 3001;
+    fastify.listen({ port: PORT, host: "0.0.0.0" }, (err, address) => {
+        if (err) {
+            fastify.log.error(err);
+            process.exit(1);
+        }
+        fastify.log.info(`✅ Servidor rodando em ${address}`);
+    });
+}
+buildServer();
