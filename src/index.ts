@@ -21,15 +21,12 @@ fastify.get("/", async (request, reply) => {
 
 // 🚩 ALTERAÇÃO PARA FUNCIONAR NO RENDER:
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
-const HOST = process.env.HOST || "0.0.0.0"; // ✅ Garantir compatibilidade com Render
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
-
-fastify.listen({ port: PORT, host: "0.0.0.0" })
-    .then((address) => {
-        fastify.log.info(`✅ Servidor rodando em ${address}`);
-    })
-    .catch((err) => {
+fastify.listen(PORT, "0.0.0.0", (err, address) => {
+    if (err) {
         fastify.log.error(err);
         process.exit(1);
-    });
+    }
+    fastify.log.info(`✅ Servidor rodando em ${address}`);
+});
+
