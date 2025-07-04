@@ -8,7 +8,7 @@ datasource db {
 }
 
 model vendas {
-  idvendas      Int      @id @default(autoincrement()) // ADICIONADO @id
+  idvendas      Int      @id @default(autoincrement())
   idorganizacao Int
   organizacao   String?  @db.VarChar(100)
   pedido        String?  @db.VarChar(50)
@@ -23,28 +23,33 @@ model vendas {
 }
 
 model assessor {
-  id        Int     @id @default(autoincrement())
-  assessor  String
-  email     String
-  senhahash String
-  ativo     Boolean
-  admin     Boolean
-}
-
-model assessororganizacao {
-  id         Int @id @default(autoincrement()) // ADICIONADO @id
-  idassessor Int
-  idorganizacao Int
+  id                    Int                    @id @default(autoincrement())
+  assessor              String
+  email                 String
+  senhahash             String
+  ativo                 Boolean
+  admin                 Boolean
+  assessorOrganizacoes  assessororganizacao[] // relação 1-N com assessororganizacao
 }
 
 model organizacao {
-  idorganizacao Int @id // ADICIONADO @id
-  organizacao   String
-  ativo         Boolean
+  idorganizacao         Int                    @id
+  organizacao           String
+  ativo                 Boolean
+  assessorOrganizacoes  assessororganizacao[] // relação 1-N com assessororganizacao
+}
+
+model assessororganizacao {
+  id             Int         @id @default(autoincrement())
+  idassessor     Int
+  idorganizacao  Int
+
+  assessor       assessor    @relation(fields: [idassessor], references: [id])
+  organizacao    organizacao @relation(fields: [idorganizacao], references: [idorganizacao])
 }
 
 model usuario {
-  idusuario     Int @id // ADICIONADO @id
+  idusuario     Int     @id
   usuario       String
   email         String
   senhahash     String
