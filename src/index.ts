@@ -1,5 +1,3 @@
-// src/index.ts
-
 import "@fastify/jwt";
 import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import fastifyCors from "@fastify/cors";
@@ -10,6 +8,7 @@ import authRoutes from "./routes/auth";
 import usuarioRoutes from "./routes/usuario";
 import organizacaoRoutes from "./routes/organizacao";
 import vendasRoutes from "./routes/vendas";
+import dreRoutes from "./routes/dre"; // ✅ IMPORTADO
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -24,11 +23,16 @@ async function buildServer() {
         },
     });
 
+    // ========================
+    // Plugins
+    // ========================
     await fastify.register(fastifyCors, { origin: "*" });
     await fastify.register(fastifyJwt, { secret: process.env.JWT_SECRET || "pgwebia-secret" });
     await fastify.register(fastifyFormbody);
 
-    // ✅ Middleware JWT para proteger rotas
+    // ========================
+    // Middleware JWT
+    // ========================
     fastify.decorate("authenticate", async function (request: FastifyRequest, reply: FastifyReply) {
         try {
             const decoded = await request.jwtVerify<{
@@ -40,7 +44,6 @@ async function buildServer() {
                 organizacao?: string;
             }>();
 
-            // Caso assessor/admin, permite troca dinâmica de organização via header
             if (decoded.idassessor) {
                 const orgIdHeader = request.headers["x-organization-id"];
                 if (orgIdHeader) {
@@ -52,26 +55,32 @@ async function buildServer() {
                 }
             }
 
-            // Torna disponível como request.user
             (request as any).user = decoded;
         } catch (err) {
-            console.error("Erro no JWT verify:", err);
+            console.error("❌ Erro no JWT verify:", err);
             reply.code(401).send({ error: "Token inválido ou não fornecido." });
         }
     });
 
-    // ✅ Registro de rotas
+    // ========================
+    // Rotas
+    // ========================
     await fastify.register(authRoutes, { prefix: "/auth" });
     await fastify.register(usuarioRoutes, { prefix: "/api" });
     await fastify.register(organizacaoRoutes, { prefix: "/api" });
     await fastify.register(vendasRoutes, { prefix: "/api" });
+    await fastify.register(dreRoutes, { prefix: "/api" }); // ✅ REGISTRADO AQUI
 
-    // ✅ Rota raiz para teste
+    // ========================
+    // Rota raiz
+    // ========================
     fastify.get("/", async () => {
         return { message: "✅ PGWebIA backend rodando!" };
     });
 
-    // ✅ Inicialização do servidor
+    // ========================
+    // Inicialização do servidor
+    // ========================
     const PORT = Number(process.env.PORT) || 3001;
     try {
         await fastify.listen({ port: PORT, host: "0.0.0.0" });

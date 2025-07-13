@@ -64,3 +64,20 @@ model usuario {
   resultados    Boolean
   indicador     Boolean
 }
+
+model dre {
+  iddre           Int      @id @default(autoincrement())
+  idorganizacao   Int
+  organizacao     String?
+  modelo          String?
+  empresa         String?
+  ano             Int
+  mes             Int
+  mesinteiro      String?
+  nivel1          String?
+  nivel2          String?
+  nivel3          String?
+  valororcado     Decimal? @db.Decimal(18, 2)
+  valorrealizado  Decimal? @db.Decimal(18, 2)
+  tipo            String?
+}
