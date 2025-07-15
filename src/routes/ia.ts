@@ -4,84 +4,135 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function iaRoutes(fastify: FastifyInstance) {
+export default async function iaRoutes(fastify: FastifyInstance) {
   fastify.post("/api/openai/a-receber", async (request, reply) => {
     const schema = z.object({
-      dadosReceber: z.array(
-        z.object({
-          cliente: z.string(),
-          vencimento: z.string(),
-          valor: z.number(),
-          status: z.string(),
-        })
-      ),
+      dadosReceber: z.array(z.object({
+        cliente: z.string(),
+        valor: z.number(),
+        vencimento: z.string(),
+        status: z.string()
+      })).optional()
     });
 
     try {
       const { dadosReceber } = schema.parse(request.body);
+      
+      const prompt = `Analise os seguintes dados de contas a receber e forneça insights profissionais:
 
-      const textoParaIA = dadosReceber
-        .map((item) => {
-          return `Cliente: ${item.cliente}, Vencimento: ${item.vencimento}, Valor: R$ ${item.valor.toFixed(
-            2
-          )}, Status: ${item.status}`;
-        })
-        .join("\n");
+${dadosReceber ? JSON.stringify(dadosReceber, null, 2) : "Dados não fornecidos"}
 
-      const prompt = `Você é um analista financeiro. Gere um resumo objetivo com base nas contas a receber listadas abaixo, identificando principais riscos, atrasos e oportunidades de cobrança:
+Forneça uma análise profissional focada em:
+1. Situação geral das contas a receber
+2. Clientes com maior exposição
+3. Sugestões de cobrança
+4. Indicadores de risco
+5. Recomendações estratégicas
 
-${textoParaIA}
-
-Resuma em até 5 linhas.`;
+Responda de forma clara e profissional, focando em insights práticos para gestão financeira.`;
 
       const resposta = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
+        max_tokens: 500,
+        temperature: 0.7,
       });
 
-      return reply.send({ resumo: resposta.choices[0].message.content?.trim() });
+      const resumo = resposta.choices[0]?.message?.content;
+      reply.send({ resumo });
+      
     } catch (err: any) {
       console.error("❌ Erro ao chamar OpenAI:", err);
-
-      // Erro por falta de crédito (insufficient_quota)
-      if (err?.code === "insufficient_quota" || err?.type === "insufficient_quota") {
-        return reply.status(400).send({
-          erro: "Créditos da IA esgotados. Entre em contato com o suporte para renovar o plano.",
-          message: "insufficient_quota"
+      
+      // Tratamento específico para diferentes tipos de erro
+      if (err.code === 'insufficient_quota' || 
+          err.message?.includes('insufficient_quota') || 
+          err.message?.includes('quota') || 
+          err.message?.includes('billing')) {
+        reply.status(400).send({ 
+          erro: "Créditos da IA esgotados",
+          message: "insufficient_quota",
+          tipo: "sem_creditos"
+        });
+      } else if (err.code === 'rate_limit_exceeded' || 
+                 err.message?.includes('rate_limit')) {
+        reply.status(429).send({ 
+          erro: "Limite de requisições excedido",
+          message: "rate_limit_exceeded",
+          tipo: "limite_excedido"
+        });
+      } else if (err.status === 401 || err.message?.includes('unauthorized')) {
+        reply.status(401).send({ 
+          erro: "Erro de autenticação com OpenAI",
+          message: "unauthorized",
+          tipo: "erro_autenticacao"
+        });
+      } else {
+        reply.status(500).send({ 
+          erro: "Erro interno do servidor",
+          message: err.message || "Erro desconhecido",
+          tipo: "erro_interno"
         });
       }
+    }
+  });
 
-      // Erro de limite de rate (429)
-      if (err?.status === 429) {
-        return reply.status(429).send({
-          erro: "Limite de requisições excedido. Tente novamente em alguns minutos.",
-          message: "rate_limit_exceeded"
-        });
-      }
+  fastify.post("/api/ia", async (request, reply) => {
+    const schema = z.object({
+      pergunta: z.string(),
+      contexto: z.string().optional()
+    });
 
-      // Erro de autenticação (401)
-      if (err?.status === 401) {
-        return reply.status(401).send({
-          erro: "Falha na autenticação com o serviço de IA.",
-          message: "authentication_failed"
-        });
-      }
+    try {
+      const { pergunta, contexto } = schema.parse(request.body);
+      
+      const prompt = contexto 
+        ? `Contexto: ${contexto}\n\nPergunta: ${pergunta}`
+        : pergunta;
 
-      // Erro de validação (corpo da requisição inválido)
-      if (err?.name === "ZodError") {
-        return reply.status(400).send({
-          erro: "Os dados enviados não estão no formato esperado. Corrija e tente novamente.",
-          message: "validation_error"
-        });
-      }
-
-      // Fallback para erro interno genérico
-      return reply.status(500).send({
-        erro: "Erro inesperado ao tentar gerar o resumo. Tente novamente mais tarde.",
-        message: "internal_error"
+      const resposta = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+        temperature: 0.7,
       });
+
+      const respostaTexto = resposta.choices[0]?.message?.content;
+      reply.send({ resposta: respostaTexto });
+      
+    } catch (err: any) {
+      console.error("❌ Erro ao chamar OpenAI:", err);
+      
+      // Tratamento específico para diferentes tipos de erro
+      if (err.code === 'insufficient_quota' || 
+          err.message?.includes('insufficient_quota') || 
+          err.message?.includes('quota') || 
+          err.message?.includes('billing')) {
+        reply.status(400).send({ 
+          erro: "Créditos da IA esgotados",
+          message: "insufficient_quota",
+          tipo: "sem_creditos"
+        });
+      } else if (err.code === 'rate_limit_exceeded' || 
+                 err.message?.includes('rate_limit')) {
+        reply.status(429).send({ 
+          erro: "Limite de requisições excedido",
+          message: "rate_limit_exceeded",
+          tipo: "limite_excedido"
+        });
+      } else if (err.status === 401 || err.message?.includes('unauthorized')) {
+        reply.status(401).send({ 
+          erro: "Erro de autenticação com OpenAI",
+          message: "unauthorized",
+          tipo: "erro_autenticacao"
+        });
+      } else {
+        reply.status(500).send({ 
+          erro: "Erro interno do servidor",
+          message: err.message || "Erro desconhecido",
+          tipo: "erro_interno"
+        });
+      }
     }
   });
 }
-
-
