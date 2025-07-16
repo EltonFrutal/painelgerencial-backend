@@ -6,7 +6,7 @@
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
     "generate": "prisma generate",
-    "start": "npm run generate && npm run build && node dist/index.js",
+    "start": "node dist/index.js",
     "postinstall": "prisma generate",
     "vercel-build": "npm run generate && npm run build"
   },
