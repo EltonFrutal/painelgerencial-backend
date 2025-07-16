@@ -7,7 +7,8 @@
     "build": "tsc",
     "generate": "prisma generate",
     "start": "npm run generate && npm run build && node dist/index.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "npm run generate && npm run build"
   },
   "keywords": [
     "fastify",
