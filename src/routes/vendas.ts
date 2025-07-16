@@ -2,11 +2,14 @@
 
 import { FastifyInstance } from "fastify";
 import prisma from "../prisma/client";
+import { z } from "zod";
 
 export default async function vendasRoutes(fastify: FastifyInstance) {
-  // Rota para buscar contas a receber (baseada na tabela vendas)
-  fastify.get("/vendas/a-receber", {
-    preValidation: [fastify.authenticate], // ✅ exige token JWT
+  // ============================
+  // 🔹 ROTA 1 - /vendas/lista
+  // ============================
+  fastify.get("/vendas/lista", {
+    preValidation: [fastify.authenticate],
   }, async (request, reply) => {
     try {
       const user = request.user as any;
@@ -16,35 +19,46 @@ export default async function vendasRoutes(fastify: FastifyInstance) {
         return reply.status(401).send({ error: "Token inválido ou sem idorganizacao." });
       }
 
-      // Buscar vendas dos últimos 6 meses para simular contas a receber
       const query = `
         SELECT 
+          idvendas,
           cliente,
-          valorvenda as valor,
-          dataemissao as vencimento,
-          CASE 
-            WHEN dataemissao < CURRENT_DATE - INTERVAL '30 days' THEN 'Atrasado'
-            WHEN dataemissao < CURRENT_DATE THEN 'Vencido'
-            ELSE 'Em aberto'
-          END as status
+          pedido,
+          dataemissao,
+          valorvenda::FLOAT as valorvenda,
+          valorcusto::FLOAT as valorcusto,
+          valorlucro::FLOAT as valorlucro,
+          tipo,
+          vendedor,
+          empresa
         FROM vendas 
         WHERE idorganizacao = $1 
         AND dataemissao >= CURRENT_DATE - INTERVAL '6 months'
-        AND valorvenda > 0
         ORDER BY dataemissao DESC
-        LIMIT 50;
+        LIMIT 100;
       `;
 
       const result = await prisma.$queryRawUnsafe(query, idorganizacao);
-      return reply.send(result);
+
+      const resultWithNumbers = (result as any[]).map(item => ({
+        ...item,
+        valorvenda: parseFloat(item.valorvenda) || 0,
+        valorcusto: parseFloat(item.valorcusto) || 0,
+        valorlucro: parseFloat(item.valorlucro) || 0
+      }));
+
+      return reply.send(resultWithNumbers);
     } catch (error) {
-      console.error("❌ Erro em /vendas/a-receber:", error);
-      return reply.status(500).send({ error: "Erro ao buscar contas a receber" });
+      console.error("❌ Erro em /vendas/lista:", error);
+      return reply.status(500).send({ error: "Erro ao buscar vendas" });
     }
   });
 
+  // ============================
+  // 🔹 ROTA 2 - /vendas/analitico
+  // ============================
   fastify.get("/vendas/analitico", {
-    preValidation: [fastify.authenticate], // ✅ exige token JWT
+    preValidation: [fastify.authenticate],
   }, async (request, reply) => {
     try {
       const { nivel, ano, mes } = request.query as {
@@ -119,6 +133,44 @@ export default async function vendasRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: "Erro ao buscar dados analíticos" });
     }
   });
+
+  // ============================
+  // 🔹 ROTA 3 - /vendas/detalhes-dia
+  // ============================
+  fastify.get("/vendas/detalhes-dia", {
+    preValidation: [fastify.authenticate],
+  }, async (request, reply) => {
+    try {
+      const schema = z.object({
+        ano: z.string(),
+        mes: z.string(),
+        dia: z.string(),
+        idorganizacao: z.string(),
+      });
+
+      const { ano, mes, dia, idorganizacao } = schema.parse(request.query);
+
+      const query = `
+        SELECT 
+          pedido,
+          cliente,
+          vendedor,
+          valorvenda::FLOAT as valorvenda,
+          valorcusto::FLOAT as valorcusto,
+          valorlucro::FLOAT as valorlucro
+        FROM vendas
+        WHERE idorganizacao = $1
+        AND TO_CHAR(dataemissao, 'YYYY-MM-DD') = $2
+        ORDER BY pedido;
+      `;
+
+      const datadia = `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+      const result = await prisma.$queryRawUnsafe(query, Number(idorganizacao), datadia);
+
+      return reply.send(result);
+    } catch (error) {
+      console.error("❌ Erro em /vendas/detalhes-dia:", error);
+      return reply.status(500).send({ error: "Erro ao buscar detalhes do dia" });
+    }
+  });
 }
-
-

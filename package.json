@@ -23,10 +23,14 @@
     "@fastify/formbody": "^8.0.2",
     "@fastify/jwt": "^9.1.0",
     "@prisma/client": "^6.10.1",
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.6.1",
     "fastify": "^5.4.0",
-    "tsconfig-paths": "^4.2.0"
+    "jsonwebtoken": "^9.0.2",
+    "openai": "^5.9.0",
+    "tsconfig-paths": "^4.2.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
