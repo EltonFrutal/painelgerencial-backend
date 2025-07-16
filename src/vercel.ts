@@ -1,5 +1,6 @@
+import { VercelRequest, VercelResponse } from '@vercel/node';
 import "@fastify/jwt";
-import Fastify, { FastifyRequest, FastifyReply } from "fastify";
+import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 import fastifyJwt from "@fastify/jwt";
 import fastifyFormbody from "@fastify/formbody";
@@ -21,17 +22,10 @@ async function buildServer() {
   if (app) return app;
 
   const fastify = Fastify({
-    logger: process.env.NODE_ENV === "production" ? false : {
-      transport: {
-        target: "pino-pretty",
-        options: { translateTime: "HH:MM:ss Z", ignore: "pid,hostname" },
-      },
-    },
+    logger: false,
   });
 
-  // ========================
-  // Plugins
-  // ========================
+  // CORS
   await fastify.register(fastifyCors, {
     origin: true,
     credentials: true,
@@ -39,33 +33,27 @@ async function buildServer() {
 
   await fastify.register(fastifyFormbody);
 
+  // JWT
   await fastify.register(fastifyJwt, {
     secret: process.env.JWT_SECRET || "supersecret",
   });
 
-  // ========================
   // Middleware de autenticação
-  // ========================
-  fastify.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.decorate("authenticate", async (request: any, reply: any) => {
     try {
       const decoded = await request.jwtVerify();
-      (request as any).user = decoded;
+      request.user = decoded;
 
-      // Sobrescrever idorganizacao se vier no header
       const headerOrgId = request.headers["x-organization-id"];
       if (headerOrgId) {
-        ((request as any).user as any).idorganizacao = parseInt(headerOrgId as string);
-        console.log(`🔄 idorganizacao sobrescrito via header: ${headerOrgId}`);
+        (request.user as any).idorganizacao = parseInt(headerOrgId as string);
       }
     } catch (err) {
-      console.error("❌ Erro no JWT verify:", err);
       return reply.status(401).send({ error: "Token inválido ou não fornecido." });
     }
   });
 
-  // ========================
   // Rotas
-  // ========================
   await fastify.register(authRoutes, { prefix: "/auth" });
   await fastify.register(usuarioRoutes, { prefix: "/api" });
   await fastify.register(organizacaoRoutes, { prefix: "/api" });
@@ -74,34 +62,36 @@ async function buildServer() {
   await fastify.register(iaRoutes);
   await fastify.register(indicadoresRoutes, { prefix: "/api" });
 
-  // ========================
   // Rota raiz
-  // ========================
   fastify.get("/", async () => {
     return { message: "✅ PGWebIA backend rodando no Vercel!" };
   });
 
+  await fastify.ready();
   app = fastify;
   return fastify;
 }
 
-// Para desenvolvimento local
-if (process.env.NODE_ENV !== "production") {
-  buildServer().then(async (fastify) => {
-    const PORT = Number(process.env.PORT) || 3001;
-    try {
-      await fastify.listen({ port: PORT, host: "0.0.0.0" });
-      console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
-    } catch (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-  });
-}
-
-// Para Vercel (serverless)
-export default async function handler(req: any, res: any) {
-  const fastify = await buildServer();
-  await fastify.ready();
-  fastify.server.emit('request', req, res);
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    const fastify = await buildServer();
+    const response = await fastify.inject({
+      method: req.method as any,
+      url: req.url || '/',
+      headers: req.headers,
+      payload: req.body,
+    });
+    
+    res.status(response.statusCode);
+    
+    // Definir headers
+    Object.entries(response.headers).forEach(([key, value]) => {
+      res.setHeader(key, value as string);
+    });
+    
+    res.send(response.body);
+  } catch (error) {
+    console.error('Erro no handler:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 }
