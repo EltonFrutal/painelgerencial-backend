@@ -1,5 +1,3 @@
-// src/index.ts
-
 import "@fastify/jwt";
 import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import fastifyCors from "@fastify/cors";
@@ -30,10 +28,18 @@ async function buildServer() {
   // ========================
   // Plugins
   // ========================
-  await fastify.register(fastifyCors, { origin: "*" });
+  await fastify.register(fastifyCors, {
+    origin: [
+      'http://localhost:3000',
+      'https://painelgerencial.vercel.app',
+    ],
+    credentials: true,
+  });
+
   await fastify.register(fastifyJwt, {
     secret: process.env.JWT_SECRET || "pgwebia-secret",
   });
+
   await fastify.register(fastifyFormbody);
 
   // ========================
