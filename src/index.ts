@@ -1,3 +1,5 @@
+// src/index.ts
+
 import "@fastify/jwt";
 import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import fastifyCors from "@fastify/cors";
@@ -9,8 +11,8 @@ import usuarioRoutes from "./routes/usuario";
 import organizacaoRoutes from "./routes/organizacao";
 import vendasRoutes from "./routes/vendas";
 import dreRoutes from "./routes/dre";
-import iaRoutes from "./routes/ia"; // ✅ IMPORTADO AQUI
-import indicadoresRoutes from "./routes/indicadores"; // ✅ NOVA ROTA
+import iaRoutes from "./routes/ia";
+import indicadoresRoutes from "./routes/indicadores";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -29,13 +31,18 @@ async function buildServer() {
   // Plugins
   // ========================
   await fastify.register(fastifyCors, { origin: "*" });
-  await fastify.register(fastifyJwt, { secret: process.env.JWT_SECRET || "pgwebia-secret" });
+  await fastify.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || "pgwebia-secret",
+  });
   await fastify.register(fastifyFormbody);
 
   // ========================
   // Middleware JWT
   // ========================
-  fastify.decorate("authenticate", async function (request: FastifyRequest, reply: FastifyReply) {
+  fastify.decorate("authenticate", async function (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
     try {
       const decoded = await request.jwtVerify<{
         idassessor?: number;
@@ -46,14 +53,15 @@ async function buildServer() {
         organizacao?: string;
       }>();
 
-      // Permite sobrescrever id da organização via header
       if (decoded.idassessor) {
         const orgIdHeader = request.headers["x-organization-id"];
         if (orgIdHeader) {
           const parsedOrgId = Number(orgIdHeader);
           if (!isNaN(parsedOrgId)) {
             decoded.idorganizacao = parsedOrgId;
-            fastify.log.info(`🔄 idorganizacao sobrescrito via header: ${parsedOrgId}`);
+            fastify.log.info(
+              `🔄 idorganizacao sobrescrito via header: ${parsedOrgId}`
+            );
           }
         }
       }
@@ -73,14 +81,18 @@ async function buildServer() {
   await fastify.register(organizacaoRoutes, { prefix: "/api" });
   await fastify.register(vendasRoutes, { prefix: "/api" });
   await fastify.register(dreRoutes, { prefix: "/api" });
-  await fastify.register(iaRoutes); // ✅ ROTA DE IA REGISTRADA
-  await fastify.register(indicadoresRoutes, { prefix: "/api" }); // ✅ NOVA ROTA
+  await fastify.register(iaRoutes);
+  await fastify.register(indicadoresRoutes, { prefix: "/api" });
 
   // ========================
-  // Rota raiz
+  // Rotas simples
   // ========================
   fastify.get("/", async () => {
     return { message: "✅ PGWebIA backend rodando!" };
+  });
+
+  fastify.get("/ping", async () => {
+    return { message: "pong" };
   });
 
   // ========================
