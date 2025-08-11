@@ -1,4 +1,4 @@
-// src/routes/usuario.ts
+// src/routes/usuario.ts ...
 import { FastifyInstance } from 'fastify';
 import prisma from '../lib/prisma';
 
